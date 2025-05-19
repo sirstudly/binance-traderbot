@@ -58,6 +58,9 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-app.get("/", (req, res) => res.send("Binance TraderBOT Webhook is live"));
+app.get("/", (req, res) => {
+  console.log("PING...");
+  res.send("Binance TraderBOT Webhook is live");
+});
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
