@@ -46,7 +46,7 @@ app.post("/webhook", async (req, res) => {
     });
     console.log("Successful Response:", JSON.stringify(response.data, null, 2));
   } catch (error) {
-    errorResponse = {
+    const errorResponse = {
       status: "error",
       message: error?.response?.data?.msg || error.message,
       code: error?.response?.status,
