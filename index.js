@@ -44,13 +44,16 @@ app.post("/webhook", async (req, res) => {
       status: "success",
       order: response.data,
     });
+    console.log("Successful Response:", JSON.stringify(response.data, null, 2));
   } catch (error) {
-    res.status(500).json({
+    errorResponse = {
       status: "error",
       message: error?.response?.data?.msg || error.message,
       code: error?.response?.status,
       details: error?.response?.data || null,
-    });
+    };
+    res.status(500).json(errorResponse);
+    console.error("Error Response:", JSON.stringify(errorResponse, null, 2));
   }
 });
 
