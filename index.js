@@ -9,7 +9,13 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.post("/webhook", async (req, res) => {
+app.post("/webhook/:token", async (req, res) => {
+  
+  if (req.params.token !== process.env.WEBHOOK_SECRET) {
+    console.error("Invalid token:", req.params.token);
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  
   const { symbol, side, quantity } = req.body;
   const apiKey = process.env.BINANCE_API_KEY;
   const apiSecret = process.env.BINANCE_API_SECRET;
