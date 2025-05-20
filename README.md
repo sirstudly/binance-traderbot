@@ -1,35 +1,28 @@
-# Binance Trading Bot
+# Binance TraderBOT Webhook
 
-A Cloudflare Worker that provides a secure webhook endpoint for executing trades on Binance.
-
-Note: This is currently being blocked by Binance because the worker IP is coming from the Cloudflare network. :SAD:
+A Node.js webhook service that allows you to execute trades on Binance through HTTP requests. This service provides a simple REST API endpoint that can be integrated with various trading bots, signals, or automated systems.
 
 ## Features
 
-- Secure webhook endpoint for executing trades
-- HMAC signature generation for Binance API authentication
-- IP address logging for request tracking
+- Execute market orders on Binance
+- Simple REST API endpoint
+- Secure API key handling
 - Error handling and response formatting
+- Environment variable configuration
+- Automatic service keep-alive with GitHub Actions
 
 ## Prerequisites
 
-- Cloudflare account
+- Node.js (v14 or higher)
 - Binance account with API access
-- Node.js and npm installed
+- Binance API Key and Secret
+- GitHub account (for automated pinging)
 
-## Environment Variables
-
-The following environment variables need to be set in your Cloudflare Worker:
-
-- `BINANCE_API_KEY`: Your Binance API key
-- `BINANCE_API_SECRET`: Your Binance API secret
-- `WEBHOOK_SECRET`: A secret token to secure your webhook endpoint
-
-## Setup
+## Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/binance-traderbot.git
 cd binance-traderbot
 ```
 
@@ -38,101 +31,96 @@ cd binance-traderbot
 npm install
 ```
 
-3. Configure your environment variables in the Cloudflare dashboard or using Wrangler:
-```bash
-wrangler secret put BINANCE_API_KEY
-wrangler secret put BINANCE_API_SECRET
-wrangler secret put WEBHOOK_SECRET
-```
-
-4. Deploy the worker:
-```bash
-npm run deploy
+3. Create a `.env` file in the root directory with your Binance API credentials:
+```env
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_api_secret_here
+PORT=3000  # Optional, defaults to 3000
+WEBHOOK_SECRET=your_webhook_secret_here  # Required for webhook security
 ```
 
 ## Usage
 
-The worker exposes a POST endpoint that accepts trading orders. The endpoint is secured with a webhook secret that must be included in the URL path.
-
-### Endpoint
-
-```
-POST https://your-worker.your-subdomain.workers.dev/{WEBHOOK_SECRET}
+1. Start the server:
+```bash
+npm start
 ```
 
-### Request Body
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "side": "BUY",
-  "quantity": "0.001"
-}
+2. Send a POST request to the webhook endpoint:
+```bash
+curl -X POST http://localhost:3000/webhook/your_webhook_secret \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "BTCUSDT",
+    "side": "BUY",
+    "quantity": "0.001"
+  }'
 ```
 
-### Example Request
+### Webhook Parameters
 
-```javascript
-fetch('https://your-worker.your-subdomain.workers.dev/your-webhook-secret', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    symbol: 'BTCUSDT',
-    side: 'BUY',
-    quantity: '0.001'
-  })
-});
-```
+- `symbol`: Trading pair (e.g., "BTCUSDT")
+- `side`: Order side ("BUY" or "SELL")
+- `quantity`: Amount to trade
 
 ### Response Format
 
+Success response:
 ```json
 {
   "status": "success",
-  "message": "Order placed successfully",
-  "code": 200,
-  "details": {
-    // Binance API response
+  "order": {
+    // Binance order response data
   }
 }
 ```
 
-## Error Handling
-
-The worker handles various error cases:
-
-- Invalid request method (non-POST)
-- Missing or invalid webhook secret
-- Missing required fields
-- Binance API errors
-- Network errors
-
-All errors are returned with appropriate HTTP status codes and descriptive messages.
-
-## Development
-
-To run the worker locally:
-
-```bash
-npm run dev
+Error response:
+```json
+{
+  "status": "error",
+  "message": "Error message",
+  "code": "Error code",
+  "details": "Additional error details"
+}
 ```
 
-This will start a local development server at `http://localhost:8787`.
+## GitHub Actions Workflow
 
-## Security
+The repository includes a GitHub Actions workflow that pings the webhook service every 12 minutes to keep it alive. This is particularly useful for free-tier Render deployments that would otherwise spin down after 15 minutes of inactivity.
 
-- The webhook endpoint is secured with a secret token
-- API keys are stored as environment variables
-- All requests are validated before processing
-- Error messages are sanitized to prevent information leakage
+The workflow is located at `.github/workflows/ping-render.yml` and runs on the following schedule:
+```yaml
+on:
+  schedule:
+    - cron: '*/12 * * * *'  # Every 12 minutes
+```
 
-## Logging
+To use this workflow:
+1. Fork this repository
+2. Go to your repository's Settings > Secrets and Variables > Actions
+3. Add a new secret called `WEBHOOK_URL` with your webhook service URL
+4. Enable GitHub Actions in your repository
 
-The worker logs:
-- Worker IP address for each request
-- Request details (symbol, side, quantity)
-- Response data
-- Any errors that occur
+## Security Considerations
 
+- Never expose your API keys in the code
+- Use environment variables for sensitive data
+- The webhook endpoint is protected by a secret token
+- Use HTTPS in production
+- Keep your `WEBHOOK_SECRET` secure and unique
+
+## Dependencies
+
+- express: Web server framework
+- axios: HTTP client
+- dotenv: Environment variable management
+- crypto: Node.js built-in module for HMAC signature generation
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. 
