@@ -1,4 +1,4 @@
-name: Keep Render Service Awake
+name: Keep Webhook Service Alive
 
 on:
   schedule:

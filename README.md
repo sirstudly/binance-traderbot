@@ -89,7 +89,7 @@ Error response:
 
 The repository includes a GitHub Actions workflow that pings the webhook service every 12 minutes to keep it alive. This is particularly useful for free-tier Render deployments that would otherwise spin down after 15 minutes of inactivity.
 
-The workflow is located at `.github/workflows/ping-render.yml` and runs on the following schedule:
+The workflow is located at `.github/workflows/ping-webhook-service.yml` and runs on the following schedule:
 ```yaml
 on:
   schedule:
