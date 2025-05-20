@@ -9,5 +9,5 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Render Web Service
-        run: curl -s -o /dev/null -w "%{http_code}" https://binance-traderbot.onrender.com/
+      - name: Ping Webhook Service
+        run: curl -s -o /dev/null -w "%{http_code}" ${{ secrets.WEBHOOK_URL }}
