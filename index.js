@@ -55,9 +55,9 @@ app.post("/webhook/:token", async (req, res) => {
     } catch (error) {
         const errorResponse = {
             status: "error",
-            message: error?.response?.data?.msg || error.message,
-            code: error?.response?.status,
-            details: error?.response?.data || null,
+            message: (error.response && error.response.data && error.response.data.msg) || error.message,
+            code: error.response ? error.response.status : null,
+            details: error.response ? error.response.data : null,
         };
         res.status(500).json(errorResponse);
         console.error("Error Response:", JSON.stringify(errorResponse, null, 2));
