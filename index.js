@@ -11,6 +11,7 @@ app.use(express.json());
 
 app.post("/webhook/:token", async (req, res) => {
 
+    console.log("Received request:", JSON.stringify(req.body, null, 2));
     if (req.params.token !== process.env.WEBHOOK_SECRET) {
         console.error("Invalid token:", req.params.token);
         return res.status(403).json({ error: "Forbidden" });
@@ -28,7 +29,6 @@ app.post("/webhook/:token", async (req, res) => {
         return res.status(400).json({ error: "Missing symbol, side, or quantity" });
     }
 
-    console.log("Received request:", JSON.stringify(req.body, null, 2));
     try {
         const timestamp = Date.now();
         const recvWindow = 5000;
