@@ -6,12 +6,12 @@ import crypto from "crypto";
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
+const recvWindow = process.env.RECV_WINDOW || 10000; // Default to 10s if not set
 
 app.use(express.json());
 
 async function getAccountBalance(apiKey, apiSecret, asset) {
     const timestamp = Date.now();
-    const recvWindow = 5000;
     const queryString = `recvWindow=${recvWindow}&timestamp=${timestamp}`;
     
     const signature = crypto
@@ -98,7 +98,6 @@ app.post("/webhook/:token", async (req, res) => {
         }
 
         const timestamp = Date.now();
-        const recvWindow = 5000;
         const queryString = `symbol=${ticker}&side=${action}&type=MARKET&quantity=${quantity}&recvWindow=${recvWindow}&timestamp=${timestamp}`;
 
         const signature = crypto
