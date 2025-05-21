@@ -17,7 +17,7 @@ app.post("/webhook/:token", async (req, res) => {
         return res.status(403).json({ error: "Forbidden" });
     }
 
-    const { symbol, action, quantity } = req.body;
+    const { ticker, action, quantity } = req.body;
     const apiKey = process.env.BINANCE_API_KEY;
     const apiSecret = process.env.BINANCE_API_SECRET;
 
@@ -25,14 +25,14 @@ app.post("/webhook/:token", async (req, res) => {
         return res.status(500).json({ error: "Binance API keys not configured." });
     }
 
-    if (!symbol || !action || !quantity) {
-        return res.status(400).json({ error: "Missing symbol, action, or quantity" });
+    if (!ticker || !action || !quantity) {
+        return res.status(400).json({ error: "Missing ticker, action, or quantity" });
     }
 
     try {
         const timestamp = Date.now();
         const recvWindow = 5000;
-        const queryString = `symbol=${symbol}&side=${action}&type=MARKET&quantity=${quantity}&recvWindow=${recvWindow}&timestamp=${timestamp}`;
+        const queryString = `symbol=${ticker}&side=${action}&type=MARKET&quantity=${quantity}&recvWindow=${recvWindow}&timestamp=${timestamp}`;
 
         const signature = crypto
             .createHmac("sha256", apiSecret)
