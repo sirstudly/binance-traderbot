@@ -75,16 +75,15 @@ app.post("/webhook/:token", async (req, res) => {
         const { baseAsset, quoteAsset, stepSize } = await getSymbolInfo(ticker);
         const currentPrice = await getCurrentPrice(ticker);
         console.log(`Base Asset: ${baseAsset}, Quote Asset: ${quoteAsset}, Step Size: ${stepSize}, Current Price: ${currentPrice}`);
-        action = action.toUpperCase();
 
         let quantity;
-        if (action === "BUY") {
+        if (action.toUpperCase() === "BUY") {
             // For BUY, get USDT balance and calculate how much of the base asset we can buy
             const usdtBalance = await getAccountBalance(apiKey, apiSecret, quoteAsset);
             quantity = roundToStepSize(usdtBalance / currentPrice, stepSize);
             console.log(`BUY! Asset Balance: ${usdtBalance}, Quantity: ${quantity}`);
         }
-        else if (action === "SELL") {
+        else if (action.toUpperCase() === "SELL") {
             // For SELL, get the base asset balance
             const unroundedQuantity = await getAccountBalance(apiKey, apiSecret, baseAsset);
             quantity = roundToStepSize(unroundedQuantity, stepSize);
