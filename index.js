@@ -33,13 +33,13 @@ app.get('/api/credentials', (req, res) => {
 
 // API Endpoints for managing credentials
 app.post("/api/credentials", checkAdminToken, async (req, res) => {
-    const { api_key, api_secret } = req.body;
+    const { api_key, api_secret, token, name } = req.body;
     
-    if (!api_key || !api_secret) {
-        return res.status(400).json({ error: "Missing API key or secret" });
+    if (!api_key || !api_secret || !token) {
+        return res.status(400).json({ error: "Missing required fields: API key, API secret, or token" });
     }
 
-    const result = await db.addCredentials(api_key, api_secret);
+    const result = await db.addCredentials(api_key, api_secret, token, name || '');
     if (result.success) {
         res.json({ 
             status: "success", 
@@ -62,6 +62,8 @@ app.get("/api/credentials/list", checkAdminToken, async (req, res) => {
             status: "success", 
             credentials: credentials.map(c => ({
                 id: c.id,
+                name: c.name || '',
+                token: c.token,
                 api_key: c.api_key,
                 created_at: c.created_at,
                 updated_at: c.updated_at
@@ -141,21 +143,17 @@ function roundToStepSize(quantity, stepSize) {
 
 app.post("/api/webhook/:token", async (req, res) => {
     console.log("Received request:", JSON.stringify(req.body, null, 2));
-    if (req.params.token !== process.env.WEBHOOK_SECRET) {
-        console.error("Invalid token:", req.params.token);
-        return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const { ticker, action } = req.body;
     
-    // Get credentials from database
-    const credentials = await db.getCredentials();
+    // Get credentials from database using token
+    const credentials = await db.getCredentialsByToken(req.params.token);
     if (!credentials) {
-        return res.status(500).json({ error: "Binance API credentials not configured in database." });
+        console.error("Invalid token:", req.params.token);
+        return res.status(403).json({ error: "Invalid token" });
     }
 
     const { api_key: apiKey, api_secret: apiSecret } = credentials;
-
+    const { ticker, action } = req.body;
+    
     if (!ticker || !action) {
         return res.status(400).json({ error: "Missing ticker or action" });
     }
@@ -226,4 +224,25 @@ app.get("/api", (req, res) => {
     res.send("Binance TraderBOT Webhook is live");
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+// Initialize database and start server
+db.initialize()
+    .then(() => {
+        app.listen(port, () => console.log(`Server running on port ${port}`));
+    })
+    .catch(error => {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    });
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM received. Closing database connection...');
+    await db.close();
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('SIGINT received. Closing database connection...');
+    await db.close();
+    process.exit(0);
+});

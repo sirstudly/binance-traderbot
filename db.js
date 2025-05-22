@@ -6,81 +6,104 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let db = null;
+
 // Initialize database
 async function initializeDatabase() {
-    const db = await open({
-        filename: path.join(__dirname, 'credentials.db'),
-        driver: sqlite3.Database
-    });
+    try {
+        db = await open({
+            filename: path.join(__dirname, 'credentials.db'),
+            driver: sqlite3.Database
+        });
 
-    // Create credentials table if it doesn't exist
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS credentials (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            api_key TEXT NOT NULL,
-            api_secret TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+        // Create credentials table if it doesn't exist
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS credentials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                api_key TEXT NOT NULL,
+                api_secret TEXT NOT NULL,
+                token TEXT NOT NULL UNIQUE,
+                name TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
-    return db;
+        return db;
+    } catch (error) {
+        console.error('Failed to initialize database:', error);
+        throw error;
+    }
 }
 
 // Get the latest API credentials
 async function getCredentials() {
-    const db = await initializeDatabase();
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
     const credentials = await db.get('SELECT api_key, api_secret FROM credentials ORDER BY id DESC LIMIT 1');
-    await db.close();
     return credentials;
 }
 
 // Add new API credentials
-async function addCredentials(apiKey, apiSecret) {
-    const db = await initializeDatabase();
+async function addCredentials(apiKey, apiSecret, token, name = '') {
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
     try {
         const result = await db.run(
-            'INSERT INTO credentials (api_key, api_secret) VALUES (?, ?)',
-            [apiKey, apiSecret]
+            'INSERT INTO credentials (api_key, api_secret, token, name) VALUES (?, ?, ?, ?)',
+            [apiKey, apiSecret, token, name]
         );
         return { success: true, id: result.lastID };
     } catch (error) {
         return { success: false, error: error.message };
-    } finally {
-        await db.close();
     }
 }
 
 // Get all credentials (for admin purposes)
 async function getAllCredentials() {
-    const db = await initializeDatabase();
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
     try {
-        const credentials = await db.all('SELECT id, api_key, api_secret, created_at, updated_at FROM credentials ORDER BY id DESC');
+        const credentials = await db.all('SELECT * FROM credentials ORDER BY id DESC');
         return credentials;
-    } finally {
-        await db.close();
+    } catch (error) {
+        console.error('Error getting all credentials:', error);
+        return [];
     }
 }
 
 // Delete credentials by ID
 async function deleteCredentials(id) {
-    const db = await initializeDatabase();
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
     try {
         const result = await db.run('DELETE FROM credentials WHERE id = ?', [id]);
         return { success: true, changes: result.changes };
     } catch (error) {
         return { success: false, error: error.message };
-    } finally {
+    }
+}
+
+// Close database connection
+async function closeDatabase() {
+    if (db) {
         await db.close();
+        db = null;
     }
 }
 
 // Initialize database and export functions
-const db = {
+const dbModule = {
+    initialize: initializeDatabase,
     getCredentials,
     addCredentials,
     getAllCredentials,
-    deleteCredentials
+    deleteCredentials,
+    close: closeDatabase
 };
 
-export default db; 
+export default dbModule;
