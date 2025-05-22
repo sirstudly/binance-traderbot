@@ -6,6 +6,8 @@ A Node.js webhook service that allows you to execute trades on Binance through H
 
 - Execute market orders on Binance
 - Automatic quantity calculation (uses 100% of available balance)
+- Case-insensitive action handling (BUY/buy, SELL/sell)
+- SQLite database for API credentials storage
 - Simple REST API endpoint
 - Secure API key handling
 - Error handling and response formatting
@@ -32,13 +34,17 @@ cd binance-traderbot
 npm install
 ```
 
-3. Create a `.env` file in the root directory with your Binance API credentials:
+3. Create a `.env` file in the root directory with your configuration:
 ```env
-BINANCE_API_KEY=your_api_key_here
-BINANCE_API_SECRET=your_api_secret_here
 PORT=3000  # Optional, defaults to 3000
 WEBHOOK_SECRET=your_webhook_secret_here  # Required for webhook security
 RECV_WINDOW=10000  # Optional, defaults to 10000ms (10s)
+```
+
+4. Initialize the database with your Binance API credentials:
+```bash
+# The database will be automatically created when you first run the application
+# You'll need to add your API credentials to the database (see API Management section)
 ```
 
 ## Usage
@@ -93,20 +99,35 @@ Error response:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| BINANCE_API_KEY | Your Binance API key | - | Yes |
-| BINANCE_API_SECRET | Your Binance API secret | - | Yes |
 | WEBHOOK_SECRET | Secret token for webhook security | - | Yes |
 | PORT | Port to run the server on | 3000 | No |
 | RECV_WINDOW | Request validity window in milliseconds | 10000 | No |
 
+## API Management
+
+The application uses SQLite to store Binance API credentials. The database file (`credentials.db`) will be automatically created in the project root directory when you first run the application.
+
+The credentials table structure:
+```sql
+CREATE TABLE credentials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    api_key TEXT NOT NULL,
+    api_secret TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+Note: API management endpoints will be added in a future update to allow dynamic updating of credentials.
+
 ## Security Considerations
 
 - Never expose your API keys in the code
-- Use environment variables for sensitive data
 - The webhook endpoint is protected by a secret token
 - Use HTTPS in production
 - Keep your `WEBHOOK_SECRET` secure and unique
 - Consider using a shorter `RECV_WINDOW` for better security
+- The SQLite database file should be properly secured and backed up
 
 ## Dependencies
 
@@ -114,6 +135,8 @@ Error response:
 - axios: HTTP client
 - dotenv: Environment variable management
 - crypto: Node.js built-in module for HMAC signature generation
+- sqlite3: SQLite database driver
+- sqlite: SQLite database wrapper
 
 ## License
 

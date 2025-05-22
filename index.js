@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
 import crypto from "crypto";
+import db from './db.js';
 
 dotenv.config();
 const app = express();
@@ -59,12 +60,14 @@ app.post("/webhook/:token", async (req, res) => {
     }
 
     const { ticker, action } = req.body;
-    const apiKey = process.env.BINANCE_API_KEY;
-    const apiSecret = process.env.BINANCE_API_SECRET;
-
-    if (!apiKey || !apiSecret) {
-        return res.status(500).json({ error: "Binance API keys not configured." });
+    
+    // Get credentials from database
+    const credentials = await db.getCredentials();
+    if (!credentials) {
+        return res.status(500).json({ error: "Binance API credentials not configured in database." });
     }
+
+    const { api_key: apiKey, api_secret: apiSecret } = credentials;
 
     if (!ticker || !action) {
         return res.status(400).json({ error: "Missing ticker or action" });
