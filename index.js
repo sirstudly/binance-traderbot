@@ -26,6 +26,11 @@ const checkAdminToken = (req, res, next) => {
     next();
 };
 
+// Serve the web interface at /api/credentials
+app.get('/api/credentials', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // API Endpoints for managing credentials
 app.post("/api/credentials", checkAdminToken, async (req, res) => {
     const { api_key, api_secret } = req.body;
@@ -50,7 +55,7 @@ app.post("/api/credentials", checkAdminToken, async (req, res) => {
     }
 });
 
-app.get("/api/credentials", checkAdminToken, async (req, res) => {
+app.get("/api/credentials/list", checkAdminToken, async (req, res) => {
     try {
         const credentials = await db.getAllCredentials();
         res.json({ 

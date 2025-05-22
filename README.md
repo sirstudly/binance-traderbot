@@ -121,7 +121,7 @@ npm start
 
 2. Open your browser and navigate to:
 ```
-http://localhost:3000
+http://localhost:3000/api/credentials
 ```
 
 The web interface provides:
@@ -134,28 +134,13 @@ The web interface provides:
 
 The application provides REST API endpoints for managing credentials. All endpoints require an admin token to be sent in the `X-Admin-Token` header.
 
-#### Add New Credentials
-```bash
-curl -X POST http://localhost:3000/api/credentials \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Token: your_admin_token" \
-  -d '{
-    "api_key": "your_binance_api_key",
-    "api_secret": "your_binance_api_secret"
-  }'
-```
+#### Web Interface
+- `GET /api/credentials` - Serves the web interface for credential management
 
-#### List All Credentials
-```bash
-curl -X GET http://localhost:3000/api/credentials \
-  -H "X-Admin-Token: your_admin_token"
-```
-
-#### Delete Credentials
-```bash
-curl -X DELETE http://localhost:3000/api/credentials/1 \
-  -H "X-Admin-Token: your_admin_token"
-```
+#### Credential Management
+- `POST /api/credentials` - Add new credentials
+- `GET /api/credentials/list` - List all credentials
+- `DELETE /api/credentials/:id` - Delete specific credentials
 
 Note: The application will always use the most recent credentials (highest ID) for trading operations.
 

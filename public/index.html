@@ -79,7 +79,10 @@
         
         <div class="form-group">
             <label for="adminToken">Admin Token:</label>
-            <input type="password" id="adminToken" placeholder="Enter your admin token">
+            <div style="display: flex; gap: 10px;">
+                <input type="password" id="adminToken" placeholder="Enter your admin token" style="flex: 1;">
+                <button type="button" onclick="loadCredentials()" style="white-space: nowrap;">List Credentials</button>
+            </div>
         </div>
 
         <h2>Add New Credentials</h2>
@@ -167,7 +170,7 @@
             if (!adminToken) return;
 
             try {
-                const response = await fetch('/api/credentials', {
+                const response = await fetch('/api/credentials/list', {
                     headers: {
                         'X-Admin-Token': adminToken
                     }
