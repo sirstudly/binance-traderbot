@@ -11,6 +11,82 @@ const recvWindow = process.env.RECV_WINDOW || 10000; // Default to 10s if not se
 
 app.use(express.json());
 
+// Middleware to check admin token
+const checkAdminToken = (req, res, next) => {
+    const adminToken = req.headers['x-admin-token'];
+    if (adminToken !== process.env.ADMIN_TOKEN) {
+        return res.status(403).json({ error: "Invalid admin token" });
+    }
+    next();
+};
+
+// API Endpoints for managing credentials
+app.post("/api/credentials", checkAdminToken, async (req, res) => {
+    const { api_key, api_secret } = req.body;
+    
+    if (!api_key || !api_secret) {
+        return res.status(400).json({ error: "Missing API key or secret" });
+    }
+
+    const result = await db.addCredentials(api_key, api_secret);
+    if (result.success) {
+        res.json({ 
+            status: "success", 
+            message: "Credentials added successfully",
+            id: result.id 
+        });
+    } else {
+        res.status(500).json({ 
+            status: "error", 
+            message: "Failed to add credentials",
+            error: result.error 
+        });
+    }
+});
+
+app.get("/api/credentials", checkAdminToken, async (req, res) => {
+    try {
+        const credentials = await db.getAllCredentials();
+        res.json({ 
+            status: "success", 
+            credentials: credentials.map(c => ({
+                id: c.id,
+                api_key: c.api_key,
+                created_at: c.created_at,
+                updated_at: c.updated_at
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: "error", 
+            message: "Failed to retrieve credentials",
+            error: error.message 
+        });
+    }
+});
+
+app.delete("/api/credentials/:id", checkAdminToken, async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid credential ID" });
+    }
+
+    const result = await db.deleteCredentials(id);
+    if (result.success) {
+        res.json({ 
+            status: "success", 
+            message: "Credentials deleted successfully",
+            changes: result.changes 
+        });
+    } else {
+        res.status(500).json({ 
+            status: "error", 
+            message: "Failed to delete credentials",
+            error: result.error 
+        });
+    }
+});
+
 async function getAccountBalance(apiKey, apiSecret, asset) {
     const timestamp = Date.now();
     const queryString = `recvWindow=${recvWindow}&timestamp=${timestamp}`;

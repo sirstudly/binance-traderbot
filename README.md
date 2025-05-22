@@ -95,14 +95,6 @@ Error response:
 }
 ```
 
-## Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| WEBHOOK_SECRET | Secret token for webhook security | - | Yes |
-| PORT | Port to run the server on | 3000 | No |
-| RECV_WINDOW | Request validity window in milliseconds | 10000 | No |
-
 ## API Management
 
 The application uses SQLite to store Binance API credentials. The database file (`credentials.db`) will be automatically created in the project root directory when you first run the application.
@@ -118,7 +110,43 @@ CREATE TABLE credentials (
 )
 ```
 
-Note: API management endpoints will be added in a future update to allow dynamic updating of credentials.
+### Managing API Credentials
+
+The application provides REST API endpoints for managing credentials. All endpoints require an admin token to be sent in the `X-Admin-Token` header.
+
+#### Add New Credentials
+```bash
+curl -X POST http://localhost:3000/api/credentials \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: your_admin_token" \
+  -d '{
+    "api_key": "your_binance_api_key",
+    "api_secret": "your_binance_api_secret"
+  }'
+```
+
+#### List All Credentials
+```bash
+curl -X GET http://localhost:3000/api/credentials \
+  -H "X-Admin-Token: your_admin_token"
+```
+
+#### Delete Credentials
+```bash
+curl -X DELETE http://localhost:3000/api/credentials/1 \
+  -H "X-Admin-Token: your_admin_token"
+```
+
+Note: The application will always use the most recent credentials (highest ID) for trading operations.
+
+## Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| WEBHOOK_SECRET | Secret token for webhook security | - | Yes |
+| ADMIN_TOKEN | Token for accessing credential management endpoints | - | Yes |
+| PORT | Port to run the server on | 3000 | No |
+| RECV_WINDOW | Request validity window in milliseconds | 10000 | No |
 
 ## Security Considerations
 

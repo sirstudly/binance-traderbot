@@ -35,9 +35,52 @@ async function getCredentials() {
     return credentials;
 }
 
+// Add new API credentials
+async function addCredentials(apiKey, apiSecret) {
+    const db = await initializeDatabase();
+    try {
+        const result = await db.run(
+            'INSERT INTO credentials (api_key, api_secret) VALUES (?, ?)',
+            [apiKey, apiSecret]
+        );
+        return { success: true, id: result.lastID };
+    } catch (error) {
+        return { success: false, error: error.message };
+    } finally {
+        await db.close();
+    }
+}
+
+// Get all credentials (for admin purposes)
+async function getAllCredentials() {
+    const db = await initializeDatabase();
+    try {
+        const credentials = await db.all('SELECT id, api_key, api_secret, created_at, updated_at FROM credentials ORDER BY id DESC');
+        return credentials;
+    } finally {
+        await db.close();
+    }
+}
+
+// Delete credentials by ID
+async function deleteCredentials(id) {
+    const db = await initializeDatabase();
+    try {
+        const result = await db.run('DELETE FROM credentials WHERE id = ?', [id]);
+        return { success: true, changes: result.changes };
+    } catch (error) {
+        return { success: false, error: error.message };
+    } finally {
+        await db.close();
+    }
+}
+
 // Initialize database and export functions
 const db = {
-    getCredentials
+    getCredentials,
+    addCredentials,
+    getAllCredentials,
+    deleteCredentials
 };
 
 export default db; 
