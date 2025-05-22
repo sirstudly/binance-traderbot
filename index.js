@@ -3,6 +3,11 @@ import dotenv from "dotenv";
 import axios from "axios";
 import crypto from "crypto";
 import db from './db.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
@@ -10,6 +15,7 @@ const port = process.env.PORT || 3000;
 const recvWindow = process.env.RECV_WINDOW || 10000; // Default to 10s if not set
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware to check admin token
 const checkAdminToken = (req, res, next) => {

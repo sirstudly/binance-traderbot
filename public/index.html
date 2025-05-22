@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance TraderBOT - Credential Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+        .success {
+            color: green;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f8f8;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .delete-btn:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binance TraderBOT - Credential Management</h1>
+        
+        <div class="form-group">
+            <label for="adminToken">Admin Token:</label>
+            <input type="password" id="adminToken" placeholder="Enter your admin token">
+        </div>
+
+        <h2>Add New Credentials</h2>
+        <form id="credentialForm">
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input type="text" id="apiKey" required>
+            </div>
+            <div class="form-group">
+                <label for="apiSecret">API Secret:</label>
+                <input type="password" id="apiSecret" required>
+            </div>
+            <button type="submit">Add Credentials</button>
+        </form>
+        <div id="formMessage"></div>
+
+        <h2>Existing Credentials</h2>
+        <div id="credentialsList">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>API Key</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="credentialsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const adminTokenInput = document.getElementById('adminToken');
+        const credentialForm = document.getElementById('credentialForm');
+        const formMessage = document.getElementById('formMessage');
+        const credentialsTableBody = document.getElementById('credentialsTableBody');
+
+        // Load credentials when admin token is entered
+        adminTokenInput.addEventListener('change', loadCredentials);
+
+        // Handle form submission
+        credentialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const adminToken = adminTokenInput.value;
+            if (!adminToken) {
+                showMessage('Please enter admin token', 'error');
+                return;
+            }
+
+            const apiKey = document.getElementById('apiKey').value;
+            const apiSecret = document.getElementById('apiSecret').value;
+
+            try {
+                const response = await fetch('/api/credentials', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': adminToken
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        api_secret: apiSecret
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('Credentials added successfully!', 'success');
+                    credentialForm.reset();
+                    loadCredentials();
+                } else {
+                    showMessage(data.error || 'Failed to add credentials', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Load credentials
+        async function loadCredentials() {
+            const adminToken = adminTokenInput.value;
+            if (!adminToken) return;
+
+            try {
+                const response = await fetch('/api/credentials', {
+                    headers: {
+                        'X-Admin-Token': adminToken
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displayCredentials(data.credentials);
+                } else {
+                    showMessage(data.error || 'Failed to load credentials', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Display credentials in table
+        function displayCredentials(credentials) {
+            credentialsTableBody.innerHTML = '';
+            credentials.forEach(cred => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cred.id}</td>
+                    <td>${cred.api_key}</td>
+                    <td>${new Date(cred.created_at).toLocaleString()}</td>
+                    <td>${new Date(cred.updated_at).toLocaleString()}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteCredential(${cred.id})">Delete</button>
+                    </td>
+                `;
+                credentialsTableBody.appendChild(row);
+            });
+        }
+
+        // Delete credential
+        async function deleteCredential(id) {
+            const adminToken = adminTokenInput.value;
+            if (!adminToken) {
+                showMessage('Please enter admin token', 'error');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete these credentials?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/credentials/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Admin-Token': adminToken
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('Credentials deleted successfully!', 'success');
+                    loadCredentials();
+                } else {
+                    showMessage(data.error || 'Failed to delete credentials', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            formMessage.textContent = message;
+            formMessage.className = type;
+            setTimeout(() => {
+                formMessage.textContent = '';
+                formMessage.className = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

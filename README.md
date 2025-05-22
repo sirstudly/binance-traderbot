@@ -110,7 +110,27 @@ CREATE TABLE credentials (
 )
 ```
 
-### Managing API Credentials
+### Web Interface
+
+The application includes a web interface for managing credentials. To access it:
+
+1. Start the server:
+```bash
+npm start
+```
+
+2. Open your browser and navigate to:
+```
+http://localhost:3000
+```
+
+The web interface provides:
+- A form to add new credentials
+- A table showing all existing credentials
+- The ability to delete credentials
+- Secure admin token authentication
+
+### API Endpoints
 
 The application provides REST API endpoints for managing credentials. All endpoints require an admin token to be sent in the `X-Admin-Token` header.
 
