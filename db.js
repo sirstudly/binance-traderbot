@@ -45,6 +45,23 @@ async function getCredentials() {
     return credentials;
 }
 
+// Get credentials by token
+async function getCredentialsByToken(token) {
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
+    try {
+        const credentials = await db.get(
+            'SELECT * FROM credentials WHERE token = ? ORDER BY id DESC LIMIT 1',
+            [token]
+        );
+        return credentials;
+    } catch (error) {
+        console.error('Error getting credentials by token:', error);
+        return null;
+    }
+}
+
 // Add new API credentials
 async function addCredentials(apiKey, apiSecret, token, name = '') {
     if (!db) {
@@ -100,6 +117,7 @@ async function closeDatabase() {
 const dbModule = {
     initialize: initializeDatabase,
     getCredentials,
+    getCredentialsByToken,
     addCredentials,
     getAllCredentials,
     deleteCredentials,
