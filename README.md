@@ -56,7 +56,7 @@ npm start
 
 2. Send a POST request to the webhook endpoint:
 ```bash
-curl -X POST http://localhost:3000/webhook/your_webhook_secret \
+curl -X POST http://localhost:3000/api/webhook/your_webhook_secret \
   -H "Content-Type: application/json" \
   -d '{
     "ticker": "BTCUSDT",
@@ -134,13 +134,17 @@ The web interface provides:
 
 The application provides REST API endpoints for managing credentials. All endpoints require an admin token to be sent in the `X-Admin-Token` header.
 
-#### Web Interface
+#### Web Interface and Status
+- `GET /api` - Check if the service is running
 - `GET /api/credentials` - Serves the web interface for credential management
 
 #### Credential Management
 - `POST /api/credentials` - Add new credentials
 - `GET /api/credentials/list` - List all credentials
 - `DELETE /api/credentials/:id` - Delete specific credentials
+
+#### Trading
+- `POST /api/webhook/:token` - Execute trades (requires webhook secret token)
 
 Note: The application will always use the most recent credentials (highest ID) for trading operations.
 

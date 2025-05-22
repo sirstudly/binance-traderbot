@@ -139,7 +139,7 @@ function roundToStepSize(quantity, stepSize) {
     return Math.floor(quantity * Math.pow(10, precision)) / Math.pow(10, precision);
 }
 
-app.post("/webhook/:token", async (req, res) => {
+app.post("/api/webhook/:token", async (req, res) => {
     console.log("Received request:", JSON.stringify(req.body, null, 2));
     if (req.params.token !== process.env.WEBHOOK_SECRET) {
         console.error("Invalid token:", req.params.token);
@@ -221,7 +221,7 @@ app.post("/webhook/:token", async (req, res) => {
     }
 });
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
     console.log("PING...");
     res.send("Binance TraderBOT Webhook is live");
 });
